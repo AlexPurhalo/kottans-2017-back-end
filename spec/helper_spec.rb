@@ -8,6 +8,7 @@ Bundler.require :test
 require 'rspec'
 require 'rack/test'
 require 'database_cleaner'
+require 'grape/rabl'
 
 DB = Sequel.connect('sqlite://db/test.db')
 DatabaseCleaner[:sequel, { :connection => DB } ]
@@ -32,4 +33,9 @@ RSpec.configure do |config|
   config.after(:each) do
     DatabaseCleaner.clean
   end
+end
+
+Rabl.configure do |config|
+  config.include_json_root = false
+  config.include_child_root = false
 end

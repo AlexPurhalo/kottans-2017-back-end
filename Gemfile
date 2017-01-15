@@ -18,3 +18,5 @@ gem 'sqlite3', '~> 1.3', '>= 1.3.13', group: 'development'
 gem 'pg', '~> 0.19.0', group: 'production'
 
 gem 'racksh', '~> 1.0'
+
+gem 'grape-rabl', '~> 0.4.2'

@@ -12,8 +12,14 @@ describe 'POST user' do
       expect(last_response.status).to eq(201)
     end
 
-    it 'shows the message that says that user was created' do
-      expect(last_response.body).to  include('Account with alex username was created!')
+    context 'shows the following data about user: ' do
+      it 'id' do
+        expect(last_response.body).to include(:id.to_json, 1.to_json)
+      end
+
+      it 'username' do
+        expect(last_response.body).to include(:username.to_json, 'alex')
+      end
     end
   end
 
