@@ -10,3 +10,6 @@
 ### Testing
     $ sequel -m db/migrations sqlite://db/test.db
     $ rspec
+    
+#### CI (Continuous Integration)
+[link to travis](https://travis-ci.org/AlexPurhalo/kottans-2017-back-end)
