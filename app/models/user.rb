@@ -6,4 +6,9 @@ class User < Sequel::Model
 
     errors.add(:bcrypted_password, 'Password can not be empty') if !bcrypted_password || bcrypted_password.empty?
   end
+
+  def before_create
+    self.access_token ||= SecureRandom.hex
+    super
+  end
 end

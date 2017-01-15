@@ -30,6 +30,12 @@ describe 'POST user' do
       expect(last_response.status).to eq(422)
     end
 
+    it 'generates the access token' do
+      post '/users', username: 'alex', bcrypted_password: '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK'
+
+      expect(User.last.access_token).not_to eq(nil)
+    end
+
     context 'shows appropriate message for' do
       it 'not provided username parameter' do
         post '/users', bcrypted_password: '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK'
@@ -60,6 +66,21 @@ describe 'POST user' do
         post '/users', username: 'alex', bcrypted_password: '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK'
 
         expect(last_response.body).to include('This username is already taken')
+      end
+    end
+
+    context 'does not show the following data about user:' do
+      before do
+        post '/users', username: 'alex', bcrypted_password: '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK'
+      end
+
+      it 'password' do
+        expect(last_response.body).not_to include(:bcrypted_password.to_json, '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK')
+
+      end
+
+      it 'access_token' do
+        expect(last_response.body).not_to include(:access_token.to_json)
       end
     end
   end

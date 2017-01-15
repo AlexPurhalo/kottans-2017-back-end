@@ -28,8 +28,16 @@ describe 'GET users' do
   end
 
   describe 'NEGATIVE' do
-    it 'does not show the users passwords' do
-      expect(last_response.body).not_to include(:bcrypted_password.to_json, '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK')
+    context 'does not show users' do
+      it 'passwords' do
+        expect(last_response.body).not_to include(:bcrypted_password.to_json,
+                                                  '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK',
+                                                  '$2a$04$n8DQE8uvTKBNGDRcFQVxlOKgTVb3x6Y4.UHbWhW8WYAn.Zp6kp2zy')
+      end
+
+      it 'access tokens' do
+        expect(last_response.body).not_to include(:access_token.to_json)
+      end
     end
   end
 end

@@ -30,6 +30,10 @@ describe 'GET user' do
       it 'bcrypted password' do
         expect(last_response.body).not_to include(:bcrypted_password.to_json, '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK')
       end
+
+      it 'access token' do
+        expect(last_response.body).not_to include(:access_token.to_json)
+      end
     end
 
     context 'for not existing user' do
