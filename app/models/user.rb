@@ -11,4 +11,6 @@ class User < Sequel::Model
     self.access_token ||= SecureRandom.hex
     super
   end
+
+  one_to_many :posts
 end

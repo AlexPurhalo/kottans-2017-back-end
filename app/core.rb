@@ -14,4 +14,6 @@ class App < Grape::API
 
   mount Users
   mount Sessions
+  mount Posts
+  mount Categories
 end

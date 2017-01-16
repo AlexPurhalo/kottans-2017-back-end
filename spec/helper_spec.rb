@@ -40,5 +40,10 @@ Rabl.configure do |config|
   config.include_child_root = false
 end
 
-class App < Grape::API; mount Users; end
+class App < Grape::API
+  mount Users
+  mount Posts
+  mount Categories
+end
+
 def app; App; end
