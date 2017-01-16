@@ -1,7 +1,4 @@
 class Users < Grape::API
-  format :json
-  formatter :json, Grape::Formatter::Rabl
-
   resources :users do
     get '/', rabl: 'users/index' do @users = User.all; end
 

@@ -17,4 +17,4 @@ Rabl.configure do |config|
   config.include_child_root = false
 end
 
-run Users
+run App

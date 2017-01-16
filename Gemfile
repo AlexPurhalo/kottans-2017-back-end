@@ -20,3 +20,5 @@ gem 'pg', '~> 0.19.0', group: 'production'
 gem 'racksh', '~> 1.0'
 
 gem 'grape-rabl', '~> 0.4.2'
+
+gem 'bcrypt', '~> 3.1', '>= 3.1.11'

@@ -39,3 +39,6 @@ Rabl.configure do |config|
   config.include_json_root = false
   config.include_child_root = false
 end
+
+class App < Grape::API; mount Users; end
+def app; App; end
