@@ -22,3 +22,5 @@ gem 'racksh', '~> 1.0'
 gem 'grape-rabl', '~> 0.4.2'
 
 gem 'bcrypt', '~> 3.1', '>= 3.1.11'
+
+gem 'rack-cors', '~> 0.4.0', :require => 'rack/cors'
