@@ -6,6 +6,7 @@ describe 'GET posts' do
 
   before do
     User.create(username: 'alex', bcrypted_password: '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK')
+    User.create(username: 'goblin', bcrypted_password: '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK')
     Post.create(title: 'first post', description: 'some text')
     Post.create(title: 'new post', description: 'some text')
     Category.create(name: 'fun')
@@ -13,6 +14,13 @@ describe 'GET posts' do
     Category.last.add_post(Post.last)
     User.last.add_post(Post.first)
     User.last.add_post(Post.last)
+    Vote.create(like: true)
+    Vote.create(like: false)
+    User.first.add_vote(Vote[1])
+    User.first.add_vote(Vote[2])
+    Post.first.add_vote(Vote[1])
+    Post.last.add_vote(Vote[2])
+    User.last.add_vote(Vote[1])
   end
 
   describe 'POSITIVE' do
@@ -37,6 +45,14 @@ describe 'GET posts' do
 
       it 'category name' do
         expect(last_response.body).to include(:categories.to_json, :name.to_json, 'fun')
+      end
+
+      it 'votes' do
+        expect(last_response.body).to include(:like.to_json, false.to_json, :votes.to_json)
+      end
+
+      it 'name of like (dislike) owner' do
+        expect(last_response.body).to include({username: 'goblin'}.to_json)
       end
     end
   end

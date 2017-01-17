@@ -88,5 +88,48 @@ class Posts < Grape::API
         { errors: { post: ['Post is not exist or already was destroyed']}}
       end
     end
+
+    put ':id/votes' do
+      errors = Array.new
+
+      unless request.headers['X-User-Id']
+        errors.push('Please provide user id, "X-User-Id" to the request headers')
+      end
+
+      unless request.headers['X-Access-Token']
+        errors.push('Please provide access token, "X-Access-Token" to header')
+      end
+
+      if request.headers['X-User-Id'] && request.headers['X-Access-Token'] != User[request.headers['X-User-Id']].access_token
+        errors.push('Personality confirmation is failed')
+      end
+
+      @post, @user = Post[params[:id]], User[request.headers['X-User-Id']]
+
+      @vote = Vote.where(user_id: request.headers['X-User-Id'], post_id: params[:id]).first
+
+      if errors.length < 1
+        if @vote
+          if @vote.like === params[:like]
+            @vote.destroy
+          else
+            @vote.like = params[:like]
+            @vote.save
+          end
+        else
+          @vote = Vote.create(like: params[:like])
+          @vote.post = @post
+          @vote.user = @user
+          @vote.save
+        end
+      end
+
+      if errors.length < 1
+        render rabl: 'posts/show'
+      else
+        status 422
+        {errors: errors}
+      end
+    end
   end
 end

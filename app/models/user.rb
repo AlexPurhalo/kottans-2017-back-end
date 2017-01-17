@@ -13,4 +13,5 @@ class User < Sequel::Model
   end
 
   one_to_many :posts
+  one_to_many :votes
 end
