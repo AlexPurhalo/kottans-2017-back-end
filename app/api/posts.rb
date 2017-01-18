@@ -1,7 +1,27 @@
 class Posts < Grape::API
   resources :posts do
-    get '/', rabl: 'posts/index' do
-      @posts = Post.order(:created_at)
+    errors = Array.new
+
+    get '/' do
+      if params[:category]
+        @category = Category.where(name: params[:category]).first
+
+        if @category
+          @posts = @category.posts
+          @posts.length < 1 && errors.push('Still does not contain any post :(')
+        else
+          errors.push('Category with this name does not exist')
+        end
+      else
+        @posts = Post.order(:created_at)
+      end
+
+      if errors.length < 1
+        render rabl: 'posts/index'
+      else
+        status 422
+        { errors: errors }
+      end
     end
 
     get '/:id' do

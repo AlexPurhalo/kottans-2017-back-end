@@ -55,5 +55,40 @@ describe 'GET posts' do
         expect(last_response.body).to include({username: 'goblin'}.to_json)
       end
     end
+
+    it 'shows the posts by chosen category' do
+      Post.create(title: 'the last post', description: 'blablalbalba')
+      Category.create(name: 'muhah')
+      User.last.add_post(Post.last)
+      Category.last.add_post(Post.last)
+
+      get '/posts?category=fun'
+
+      expect(last_response.body).not_to include('muhah')
+    end
+  end
+
+  describe 'NEGATIVE' do
+    it 'shows 422 status' do
+      get '/posts?category=wtf'
+
+      expect(last_response.status).to eq(422)
+    end
+
+    context 'shows error message about' do
+      it 'note existing category' do
+        get '/posts?category=wtf'
+
+        expect(last_response.body).to include('Category with this name does not exist')
+      end
+
+      it 'category with the empty posts list' do
+        Category.create(name: 'empty')
+        get '/posts?category=empty'
+
+        expect(last_response.body).to include('Still does not contain any post :(')
+      end
+    end
   end
 end
+#
