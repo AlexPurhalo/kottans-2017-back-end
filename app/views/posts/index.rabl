@@ -6,3 +6,7 @@ child(:votes) {
     attributes :like
     child(:user) { attributes :username }
 }
+child(:comments) {
+    attributes :id, :body, :created_at
+    child(:user) { attributes :username }
+}

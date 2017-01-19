@@ -151,5 +151,41 @@ class Posts < Grape::API
         {errors: errors}
       end
     end
+
+    get ':id/comments', rabl: 'posts/comments' do
+      @post = Post[params[:id]]
+      @comments = @post.comments
+    end
+
+    post ':id/comments' do
+      errors = Array.new
+
+      if params[:body].nil? || params[:body].length < 1
+        errors.push('Please provide some content for to post a comment')
+      end
+
+      unless request.headers['X-User-Id']
+        errors.push('Please provide id of post owner, "X-User-Id" to request headers')
+      end
+
+      unless request.headers['X-Access-Token']
+        errors.push('Please provide access token, "X-Access-Token" to header')
+      end
+
+      if request.headers['X-User-Id'] && request.headers['X-Access-Token'] != User[request.headers['X-User-Id']].access_token
+        errors.push('Personality confirmation is failed')
+      end
+
+      if errors.length < 1
+        @post = Post[params[:id]]
+        @user = User[request.headers['X-User-Id']]
+        @comment = Comment.create(body: params[:body])
+        @user.add_comment(@comment)
+        @post.add_comment(@comment)
+        @post.comments.count
+      else
+        { errors: errors }
+      end
+    end
   end
 end

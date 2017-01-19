@@ -21,6 +21,9 @@ describe 'GET posts' do
     Post.first.add_vote(Vote[1])
     Post.last.add_vote(Vote[2])
     User.last.add_vote(Vote[1])
+    Comment.create(body: 'Hello World I am Alex')
+    User.last.add_comment(Comment.last)
+    Post.last.add_comment(Comment.last)
   end
 
   describe 'POSITIVE' do
@@ -53,6 +56,16 @@ describe 'GET posts' do
 
       it 'name of like (dislike) owner' do
         expect(last_response.body).to include({username: 'goblin'}.to_json)
+      end
+
+      context 'comments' do
+        it 'create_date' do
+          expect(last_response.body).to include(Comment.last.created_at.to_json)
+        end
+
+        it 'body' do
+          expect(last_response.body).to include(:body.to_json 'Hello World I am Alex')
+        end
       end
     end
 
@@ -91,4 +104,3 @@ describe 'GET posts' do
     end
   end
 end
-#
