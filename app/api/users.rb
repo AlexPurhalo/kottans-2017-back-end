@@ -18,7 +18,7 @@ class Users < Grape::API
 
       if @user.valid?
         @user.save
-        render rabl: 'users/show'
+        { access_token: @user.access_token }
       else
         status 422
         { errors: @user.errors }
