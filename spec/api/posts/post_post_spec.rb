@@ -16,13 +16,11 @@ describe 'POST post' do
     before do
       header 'X-User-Id', user.id
       header 'X-Access-Token', user.access_token
-      header 'X-Category-Name', category.name
-      post '/posts', title: 'new post', description: 'some text'
+      post '/posts', title: 'new post', description: 'some text', categories: ['fun', 'lol']
     end
 
     it 'has a 201 status' do; expect(last_response.status).to eq(201); end
     it 'pushes post to other' do; expect(Post.count).to eq(1); end
-
 
     context 'shows following attributes:' do
       it 'description' do; expect(last_response.body).to include(:description.to_json, 'some text'); end

@@ -7,13 +7,20 @@ Bundler.require
 app_base = "#{File.dirname(File.expand_path(__FILE__))}/.."
 Dir.glob("#{app_base}/app/models/*.rb").each { |i| require i }
 Dir.glob("#{app_base}/app/api/*.rb").each { |i| require i }
+Dir.glob("#{app_base}/app/helpers/*.rb").each { |i| require i }
 
 class App < Grape::API
   format :json
   formatter :json, Grape::Formatter::Rabl
 
+
+
+  helpers Validation
+
   mount Users
   mount Sessions
+
   mount Posts
+
   mount Categories
 end

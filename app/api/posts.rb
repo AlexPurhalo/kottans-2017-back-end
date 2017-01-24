@@ -37,43 +37,23 @@ class Posts < Grape::API
     post '/' do
       errors = Array.new
 
-      unless params[:title] || params[:description]
-        errors.push('Please provide title or description')
-      end
+      post_errors = post_post_errors(params[:title], params[:description], params[:categories])
+      errors.concat(post_errors) unless post_errors.empty?
 
-      if params[:title] && params[:title].length < 1
-        errors.push('Title can not be empty')
-      end
-
-      if params[:description] && params[:description].length < 1
-        errors.push('Description can not be empty')
-      end
-
-      unless request.headers['X-User-Id']
-        errors.push('Please provide id of post owner, "X-User-Id" to request headers')
-      end
-
-      unless request.headers['X-Access-Token']
-        errors.push('Please provide access token, "X-Access-Token" to header')
-      end
-
-      if request.headers['X-User-Id'] && request.headers['X-Access-Token'] != User[request.headers['X-User-Id']].access_token
-        errors.push('Personality confirmation is failed')
-      end
-
-      unless request.headers['X-Category-Name']
-        errors.push('Please provide category for this post')
-      end
+      auth_errors = auth_errors(request.headers['X-User-Id'], request.headers['X-Access-Token'])
+      errors.concat(auth_errors) unless auth_errors.empty?
 
       if errors.length < 1
-        @post = Post.create(title: params[:title], description: params[:description])
+        @post = Post.create(title: params[:title], description: params[:description]) # creates a new post
 
-        @user = User[request.headers['X-User-Id']]
-        @user.add_post(@post)
+        @user = User[request.headers['X-User-Id']] # finds a post owner
+        @user.add_post(@post) # pushes a recently created post to founded user
 
-        @category = Category.where(name: request.headers['X-Category-Name']).first
-        @category.nil? && (@category = Category.create(name: request.headers['X-Category-Name']))
-        @category.add_post(@post)
+        params[:categories].each do |category_name|
+          category = Category.where(name: category_name).first
+          category.nil? && (category = Category.create(name: category_name))
+          category.add_post(@post)
+        end
 
         render rabl: 'posts/show'
       else
@@ -111,6 +91,7 @@ class Posts < Grape::API
 
     put ':id/votes' do
       errors = Array.new
+
 
       unless request.headers['X-User-Id']
         errors.push('Please provide user id, "X-User-Id" to the request headers')
