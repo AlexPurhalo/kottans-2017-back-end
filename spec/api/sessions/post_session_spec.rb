@@ -17,8 +17,14 @@ describe 'POST sessions' do
 
       end
 
-      it 'renders a access token' do
-        expect(last_response.body).to include({access_token: User.first.access_token}.to_json)
+      context 'renders the following data' do
+        it 'access token' do
+          expect(last_response.body).to include(:access_token.to_json, User.first.access_token.to_json)
+        end
+
+        it 'user id' do
+          expect(last_response.body).to include(:user_id.to_json, User.first.id.to_json)
+        end
       end
     end
   end

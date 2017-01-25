@@ -18,7 +18,7 @@ class Users < Grape::API
 
       if @user.valid?
         @user.save
-        { access_token: @user.access_token }
+        { access_token: @user.access_token, user_id: @user.id }
       else
         status 422
         { errors: @user.errors }

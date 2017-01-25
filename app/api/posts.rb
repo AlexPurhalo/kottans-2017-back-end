@@ -13,7 +13,7 @@ class Posts < Grape::API
           errors.push('Category with this name does not exist')
         end
       else
-        @posts = Post.order(:created_at)
+        @posts = Post.order(Sequel.desc(:created_at))
       end
 
       if errors.length < 1
@@ -28,7 +28,7 @@ class Posts < Grape::API
       @post = Post[params[:id]]
 
       if @post
-        render rabl: 'posts/show'
+        render rabl: 'posts/index'
       else
         { errors: { post: ['Post with this id does niot exist']}}
       end
@@ -54,8 +54,8 @@ class Posts < Grape::API
           category.nil? && (category = Category.create(name: category_name))
           category.add_post(@post)
         end
-
-        render rabl: 'posts/show'
+        @posts = Post.order(Sequel.desc(:created_at))
+        render rabl: 'posts/index'
       else
         status 422
         { errors: errors }
@@ -70,7 +70,7 @@ class Posts < Grape::API
 
       if @post.valid? || @post.errors[:post]
         @post.save
-        render rabl: 'posts/show'
+        render rabl: 'posts/index'
       else
         status 422
         { errors: @post.errors }
@@ -82,7 +82,7 @@ class Posts < Grape::API
 
       if @post
         @post.destroy
-        @posts = Post.order(:created_at)
+        @posts = Post.order(Sequel.desc(:created_at))
         render rabl: 'posts/index'
       else
         { errors: { post: ['Post is not exist or already was destroyed']}}
@@ -126,14 +126,14 @@ class Posts < Grape::API
       end
 
       if errors.length < 1
-        render rabl: 'posts/show'
+        render rabl: 'posts/index'
       else
         status 422
         {errors: errors}
       end
     end
 
-    get ':id/comments', rabl: 'posts/comments' do
+    get ':id/comments', rabl: 'posts/index' do
       @post = Post[params[:id]]
       @comments = @post.comments
     end
@@ -145,27 +145,15 @@ class Posts < Grape::API
         errors.push('Please provide some content for to post a comment')
       end
 
-      unless request.headers['X-User-Id']
-        errors.push('Please provide id of post owner, "X-User-Id" to request headers')
-      end
-
-      unless request.headers['X-Access-Token']
-        errors.push('Please provide access token, "X-Access-Token" to header')
-      end
-
-      if request.headers['X-User-Id'] && request.headers['X-Access-Token'] != User[request.headers['X-User-Id']].access_token
-        errors.push('Personality confirmation is failed')
-      end
+      auth_errors = auth_errors(request.headers['X-User-Id'], request.headers['X-Access-Token'])
+      errors.concat(auth_errors) unless auth_errors.empty?
 
       if errors.length < 1
-        @post = Post[params[:id]]
-        @user = User[request.headers['X-User-Id']]
-        @comment = Comment.create(body: params[:body])
-        @user.add_comment(@comment)
-        @post.add_comment(@comment)
-        @post.comments.count
+        @post, @user = Post[params[:id]], User[request.headers['X-User-Id']]
+        (@comment = Comment.create(body: params[:body])) && @user.add_comment(@comment) && @post.add_comment(@comment)
+        (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index')
       else
-        { errors: errors }
+        (status 422) && ({ errors: errors })
       end
     end
   end

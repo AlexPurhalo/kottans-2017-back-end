@@ -12,8 +12,14 @@ describe 'POST user' do
       expect(last_response.status).to eq(201)
     end
 
-    it 'shows the access token' do
-      expect(last_response.body).to include(:access_token.to_json)
+    context 'renders the following data' do
+      it 'access token' do
+        expect(last_response.body).to include(:access_token.to_json, User.first.access_token.to_json)
+      end
+
+      it 'user id' do
+        expect(last_response.body).to include(:user_id.to_json, User.first.id.to_json)
+      end
     end
   end
 
@@ -70,7 +76,6 @@ describe 'POST user' do
 
       it 'password' do
         expect(last_response.body).not_to include(:bcrypted_password.to_json, '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK')
-
       end
     end
   end
