@@ -92,44 +92,22 @@ class Posts < Grape::API
     put ':id/votes' do
       errors = Array.new
 
+      user_id, jwt, post_id = request.headers['X-User-Id'], request.headers['X-Access-Token'], params[:id]
 
-      unless request.headers['X-User-Id']
-        errors.push('Please provide user id, "X-User-Id" to the request headers')
-      end
-
-      unless request.headers['X-Access-Token']
-        errors.push('Please provide access token, "X-Access-Token" to header')
-      end
-
-      if request.headers['X-User-Id'] && request.headers['X-Access-Token'] != User[request.headers['X-User-Id']].access_token
-        errors.push('Personality confirmation is failed')
-      end
-
-      @post, @user = Post[params[:id]], User[request.headers['X-User-Id']]
-
-      @vote = Vote.where(user_id: request.headers['X-User-Id'], post_id: params[:id]).first
+      (auth_errors = auth_errors(user_id, jwt)) && (errors.concat(auth_errors) unless auth_errors.empty?)
 
       if errors.length < 1
-        if @vote
-          if @vote.like === params[:like]
-            @vote.destroy
-          else
-            @vote.like = params[:like]
-            @vote.save
-          end
+        @post, @user, @vote = Post[post_id], User[user_id], Vote.where(user_id: user_id, post_id: post_id).first
+
+        if @vote.nil?
+          (@vote = Vote.create(like: params[:like])) && (@vote.post = @post) && (@vote.user = @user) && @vote.save
         else
-          @vote = Vote.create(like: params[:like])
-          @vote.post = @post
-          @vote.user = @user
-          @vote.save
+          @vote.like === params[:like] ? @vote.destroy : @vote.update(like: !@vote.like)
         end
-      end
 
-      if errors.length < 1
-        render rabl: 'posts/index'
+        (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index')
       else
-        status 422
-        {errors: errors}
+        (status 422) && ({errors: errors})
       end
     end
 
