@@ -15,4 +15,5 @@ class User < Sequel::Model
   one_to_many :posts
   one_to_many :votes
   one_to_many :comments
+  many_to_many :parties, left_key: :user_id, right_key: :party_id, joint_table: :parties_users
 end
