@@ -24,7 +24,7 @@ class Sessions < Grape::API
       status 422
       { errors: errors }
     else
-      { access_token: @user.access_token, user_id: @user.id }
+      { access_token: @user.access_token, user_id: @user.id, username: @user.username }
     end
   end
 end

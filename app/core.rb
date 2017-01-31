@@ -23,4 +23,6 @@ class App < Grape::API
   mount Posts
 
   mount Categories
+
+  mount Questions
 end

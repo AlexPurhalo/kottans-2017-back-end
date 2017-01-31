@@ -13,6 +13,20 @@ class Users < Grape::API
       end
     end
 
+    get '/:username/answers', rabl: 'answers/index' do
+      @answers = User.where(username: params[:username]).first.answers
+    end
+
+    post '/:username/answers' do
+      user_id = request.headers['X-User-Id']
+      question_id = Question[params[:question_id]]
+
+      @answer = Answer.create(user_id: user_id, body: params[:body], question_id: question_id)
+      @answers = User[user_id].answers
+
+      render rabl: 'answers/index'
+    end
+
     post '/' do
       @user = User.new params
 
