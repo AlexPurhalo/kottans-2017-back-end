@@ -17,14 +17,17 @@ class Users < Grape::API
       @answers = User.where(username: params[:username]).first.answers
     end
 
-    post '/:username/answers' do
-      user_id = request.headers['X-User-Id']
-      question_id = Question[params[:question_id]]
+    put '/:username/answers/:answer_id' do
+      user_id, jwt, errors = request.headers['X-User-Id'], request.headers['X-Access-Token'], Array.new
+      (auth_errors = auth_errors(user_id, jwt)) && (errors.concat(auth_errors) unless auth_errors.empty?)
+      errors.push('Body for answer is required') unless params[:body]
 
-      @answer = Answer.create(user_id: user_id, body: params[:body], question_id: question_id)
-      @answers = User[user_id].answers
-
-      render rabl: 'answers/index'
+      if errors.length < 1
+        Answer[params[:answer_id]].update(body: params[:body])
+        (@answers = User[request.headers['X-User-Id']].answers) && (render rabl: 'answers/index')
+      else
+        (status 422) && ({ errors: errors })
+      end
     end
 
     post '/' do

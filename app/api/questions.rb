@@ -16,9 +16,14 @@ class Questions < Grape::API
 
 
     post '/:id/answers' do # .../questions/1/answers || ../users/alex/answers
-      @answer = Answer.create(user_id: request.headers['X-User-Id'], question_id: params[:id], body: params[:body])
-      @answers = User[request.headers['X-User-Id']].answers
-      render rabl: 'answers/index'
+      user_id, jwt, errors = request.headers['X-User-Id'], request.headers['X-Access-Token'], Array.new
+      (auth_errors = auth_errors(user_id, jwt)) && (errors.concat(auth_errors) unless auth_errors.empty?)
+      errors.push('Body for answer is required') unless params[:body]
+
+      if errors.length < 1
+        @answer = Answer.create(user_id: user_id, question_id: params[:id], body: params[:body])
+        (@answers = User[request.headers['X-User-Id']].answers) && (render rabl: 'answers/index')
+      end
     end
   end
 end
