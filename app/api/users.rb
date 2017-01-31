@@ -24,7 +24,18 @@ class Users < Grape::API
 
       if errors.length < 1
         Answer[params[:answer_id]].update(body: params[:body])
-        (@answers = User[request.headers['X-User-Id']].answers) && (render rabl: 'answers/index')
+        (@answers = User[user_id].answers) && (render rabl: 'answers/index')
+      else
+        (status 422) && ({ errors: errors })
+      end
+    end
+
+    delete ':username/answers/:answer_id' do
+      user_id, jwt, errors = request.headers['X-User-Id'], request.headers['X-Access-Token'], Array.new
+      (auth_errors = auth_errors(user_id, jwt)) && (errors.concat(auth_errors) unless auth_errors.empty?)
+
+      if errors.length < 1
+        Answer[params[:answer_id]].destroy && (@answers = User[user_id].answers) && (render rabl: 'answers/index')
       else
         (status 422) && ({ errors: errors })
       end
