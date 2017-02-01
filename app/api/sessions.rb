@@ -21,8 +21,7 @@ class Sessions < Grape::API
     end
 
     if errors.length + errors.length > 0
-      status 422
-      { errors: errors }
+      (status 422) && ({ errors: errors })
     else
       { access_token: @user.access_token, user_id: @user.id, username: @user.username }
     end

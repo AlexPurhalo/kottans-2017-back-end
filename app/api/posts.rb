@@ -7,7 +7,7 @@ class Posts < Grape::API
         @category = Category.where(name: params[:category]).first
 
         if @category
-          @posts = @category.posts
+          @posts = @category.posts.sort_by {|obj| obj.created_at}.reverse
           @posts.length < 1 && errors.push('Still does not contain any post :(')
         else
           errors.push('Category with this name does not exist')
@@ -16,22 +16,7 @@ class Posts < Grape::API
         @posts = Post.order(Sequel.desc(:created_at))
       end
 
-      if errors.length < 1
-        render rabl: 'posts/index'
-      else
-        status 422
-        { errors: errors }
-      end
-    end
-
-    get '/:id' do
-      @post = Post[params[:id]]
-
-      if @post
-        render rabl: 'posts/index'
-      else
-        { errors: { post: ['Post with this id does niot exist']}}
-      end
+      errors.length < 1 ? (render rabl: 'posts/index') : ((status 422) && ({ errors: errors }))
     end
 
     post '/' do
@@ -43,8 +28,10 @@ class Posts < Grape::API
       auth_errors = auth_errors(request.headers['X-User-Id'], request.headers['X-Access-Token'])
       errors.concat(auth_errors) unless auth_errors.empty?
 
+      errors.push('Choice - your post is event or not (add "with_party" boolean)') if params[:with_party] === nil
+
       if errors.length < 1
-        @post = Post.create(title: params[:title], description: params[:description]) # creates a new post
+        @post = Post.create(title: params[:title], description: params[:description], with_party: params[:with_party])
 
         @user = User[request.headers['X-User-Id']] # finds a post owner
         @user.add_post(@post) # pushes a recently created post to founded user
@@ -54,6 +41,7 @@ class Posts < Grape::API
           category.nil? && (category = Category.create(name: category_name))
           category.add_post(@post)
         end
+
         @posts = Post.order(Sequel.desc(:created_at))
         render rabl: 'posts/index'
       else
@@ -68,25 +56,18 @@ class Posts < Grape::API
       params[:title] && (@post.title = params[:title])
       params[:description] && (@post.description = params[:description])
 
-      if @post.valid? || @post.errors[:post]
-        @post.save
-        render rabl: 'posts/index'
-      else
-        status 422
-        { errors: @post.errors }
-      end
+
+      @post.valid? || @post.errors[:post] ?
+          (@post.save && (render rabl: 'posts/index')) :
+          (status 422) && ({ errors: @post.errors })
     end
 
     delete '/:id' do
       @post = Post[params[:id]]
 
-      if @post
-        @post.destroy
-        @posts = Post.order(Sequel.desc(:created_at))
-        render rabl: 'posts/index'
-      else
-        { errors: { post: ['Post is not exist or already was destroyed']}}
-      end
+      @post ?
+          (@post.destroy) && (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index') :
+          { errors: { post: ['Post is not exist or already was destroyed']}}
     end
 
     put ':id/votes' do
