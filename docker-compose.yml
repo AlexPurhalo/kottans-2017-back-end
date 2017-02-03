@@ -1,0 +1,12 @@
+version: '2'
+services:
+  web:
+    build: .
+    command: foreman start -f ./Procfile_docker
+    environment:
+      RACK_ENV: development
+      DATABASE_URL: 'sqlite://db/database.db'
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
