@@ -2,6 +2,11 @@
     $ bundle install
     $ sequel -m db/migrations sqlite://db/database.db
     $ foreman start
+
+### Quick start with Docker
+	$ install [docker](https://docs.docker.com/engine/installation/) and [docker-compose](https://docs.docker.com/compose/install/)
+    $ docker-compose build
+    $ docker-compose up
     
 ### Work with DB
     $ racksh
