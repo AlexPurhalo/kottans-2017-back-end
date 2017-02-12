@@ -16,7 +16,12 @@ describe 'POST post' do
     before do
       header 'X-User-Id', user.id
       header 'X-Access-Token', user.access_token
-      post '/posts', title: 'new post', description: 'some text', categories: ['fun', 'lol']
+      post '/posts',
+           title: 'new post',
+           description: 'some text',
+           categories: ['fun', 'lol'],
+           with_party: false,
+           with_voting: false
     end
 
     it 'has a 201 status' do; expect(last_response.status).to eq(201); end

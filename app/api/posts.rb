@@ -28,10 +28,18 @@ class Posts < Grape::API
       auth_errors = auth_errors(request.headers['X-User-Id'], request.headers['X-Access-Token'])
       errors.concat(auth_errors) unless auth_errors.empty?
 
-      errors.push('Choice - your post is event or not (add "with_party" boolean)') if params[:with_party] === nil
+      errors.push('Provide "with_party" - "true" or "false"') if params[:with_party] === nil
+      errors.push('Provide "with_voting" - "true" or "false"') if params[:with_voting] === nil
+      errors.push('Provide "variants" array') if params[:with_voting] === true && params[:variants] === nil
+      errors.push('"variants" array can not be empty') if params[:variants] && params[:variants].length < 1
 
       if errors.length < 1
-        @post = Post.create(title: params[:title], description: params[:description], with_party: params[:with_party])
+        @post = Post.create(
+            title: params[:title],
+            description: params[:description],
+            with_party: params[:with_party],
+            with_voting: params[:with_voting]
+        )
 
         @user = User[request.headers['X-User-Id']] # finds a post owner
         @user.add_post(@post) # pushes a recently created post to founded user
@@ -41,6 +49,8 @@ class Posts < Grape::API
           category.nil? && (category = Category.create(name: category_name))
           category.add_post(@post)
         end
+
+        params[:with_voting] === true && params[:variants].each { |variant| Variant.create(body: variant, post_id: @post.id) }
 
         @posts = Post.order(Sequel.desc(:created_at))
         render rabl: 'posts/index'
