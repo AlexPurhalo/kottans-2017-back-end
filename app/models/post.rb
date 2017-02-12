@@ -4,6 +4,7 @@ class Post < Sequel::Model
   one_to_many :votes
   one_to_many :comments
   one_to_one :party
+  one_to_many :variants
 
   def before_create
     self.created_at = Time.now
