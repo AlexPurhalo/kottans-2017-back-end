@@ -14,6 +14,16 @@ child(:party) {
     attributes :id
     child(:users) { attributes :id, :username }
 }
+
 child(:variants) {
     attributes :id, :body
+    child(:voting_answers, :root => "voting_answers") {
+        attributes :id
+        child(:user) { attributes :username, :id }
+    }
+}
+
+child(:voting_answers, :root => "voting_answers") {
+    attributes :id
+    child(:user) { attributes :username, :id }
 }

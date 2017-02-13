@@ -46,17 +46,18 @@ class Posts < Grape::API
 
         params[:categories].each do |category_name|
           category = Category.where(name: category_name).first
-          category.nil? && (category = Category.create(name: categordy_name))
+          category.nil? && (category = Category.create(name: category_name))
           category.add_post(@post)
         end
 
-        params[:with_voting] === true && params[:variants].each { |variant| Variant.create(body: variant, post_id: @post.id) }
+        params[:with_voting] === true && params[:variants].each do |variant|
+          Variant.create(body: variant, post_id: @post.id)
+        end
 
-        @posts = Post.order(Sequel.desc(:created_at))
-        render rabl: 'posts/index'
+        (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index')
       else
-        status 422
-        { errors: errors }
+        (status 422) && ({ errors: errors })
+
       end
     end
 
@@ -100,6 +101,21 @@ class Posts < Grape::API
       else
         (status 422) && ({errors: errors})
       end
+    end
+
+    get ':id/voting_answers', rabl: 'voting_answers/index' do
+      @answers = Post[params[:id]].voting_answers
+    end
+
+    post ':id/voting_answers', rabl: 'voting_answers/index' do
+      @post = Post[params[:id]]
+
+      @answer = VotingAnswer.create(
+          user_id: request.headers['X-User-Id'],
+          post_id: @post.id,
+          variant: params[:variant_id])
+
+      @answers = @post.voting_answers
     end
 
     get ':id/comments', rabl: 'posts/index' do
@@ -148,4 +164,5 @@ class Posts < Grape::API
       end
     end
   end
+
 end
