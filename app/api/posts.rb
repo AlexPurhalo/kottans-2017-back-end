@@ -46,7 +46,7 @@ class Posts < Grape::API
 
         params[:categories].each do |category_name|
           category = Category.where(name: category_name).first
-          category.nil? && (category = Category.create(name: category_name))
+          category.nil? && (category = Category.create(name: categordy_name))
           category.add_post(@post)
         end
 
