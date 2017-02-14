@@ -1,8 +1,8 @@
 class Users < Grape::API
   resources :users do
     get '/', rabl: 'users/index' do
-      @users = Array.new
-      @users = User.all.each { |user| user.answers.length > 0 && @users.push(user) }
+      users = Array.new
+      @users = User.all.map { |user| user.answers.length > 1 && users.push(user) }
     end
 
     get '/:id' do

@@ -30,8 +30,10 @@ class Posts < Grape::API
 
       errors.push('Provide "with_party" - "true" or "false"') if params[:with_party] === nil
       errors.push('Provide "with_voting" - "true" or "false"') if params[:with_voting] === nil
-      errors.push('Provide "variants" array') if params[:with_voting] === true && params[:variants] === nil
-      errors.push('"variants" array can not be empty') if params[:variants] && params[:variants].length < 1
+
+      if params[:with_voting] == true && !params[:variants]
+        errors.push('Provide "variants" array')
+      end
 
       if errors.length < 1
         @post = Post.create(
@@ -107,15 +109,24 @@ class Posts < Grape::API
       @answers = Post[params[:id]].voting_answers
     end
 
-    post ':id/voting_answers', rabl: 'voting_answers/index' do
-      @post = Post[params[:id]]
+    post ':post_id/variants/:variant_id/voting_answers/' do
+      user_id, access_token, errors = request.headers['X-User-Id'], request.headers['X-Access-Token'], Array.new
+      (auth_errors = auth_errors(user_id, access_token)) && (errors.concat(auth_errors) unless auth_errors.empty?)
 
-      @answer = VotingAnswer.create(
-          user_id: request.headers['X-User-Id'],
-          post_id: @post.id,
-          variant: params[:variant_id])
+      post_id, variant_id = params[:post_id], params[:variant_id]
 
-      @answers = @post.voting_answers
+      if errors.length < 1
+        answer = VotingAnswer.create(post_id: post_id, variant_id: variant_id, user_id: user_id)
+
+        User[user_id].add_voting_answer(answer)
+        Post[post_id].add_voting_answer(answer)
+        Variant[variant_id].add_voting_answer(answer)
+
+        @answers = Post[post_id].voting_answers
+        (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index')
+      else
+        (status 422) && ({ errors: errors })
+      end
     end
 
     get ':id/comments', rabl: 'posts/index' do
