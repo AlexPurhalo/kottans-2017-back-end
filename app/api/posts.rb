@@ -64,15 +64,7 @@ class Posts < Grape::API
     end
 
     put '/:id' do
-      @post = Post[params[:id]]
-
-      params[:title] && (@post.title = params[:title])
-      params[:description] && (@post.description = params[:description])
-
-
-      @post.valid? || @post.errors[:post] ?
-          (@post.save && (render rabl: 'posts/index')) :
-          (status 422) && ({ errors: @post.errors })
+      update_by_params((@post = Post[params[:id]]), params) && (render rabl: 'posts/show')
     end
 
     delete '/:id' do

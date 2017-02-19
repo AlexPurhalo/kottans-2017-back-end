@@ -6,7 +6,7 @@ module Validation
     errors.push('Personality confirmation is failed') if user_id && access_token != User[user_id].access_token
     errors
   end
-  
+
   def post_post_errors(title, description, categories)
     errors = Array.new
     errors.push('Please provide both title and description') unless title && description
@@ -16,4 +16,6 @@ module Validation
     errors.push('Pleas provide at last one category') if categories && categories.length < 1
     errors
   end
+
+  def update_by_params(record, params); params.each { |param, val| param != 'id' && record.update("#{param}": val)}; end
 end
