@@ -3,6 +3,7 @@ require 'rubygems'
 require 'bundler/setup'
 require 'grape'
 require 'sequel'
+require 'rest-client'
 require 'rack/cors'
 
 DB = Sequel.connect(ENV['DATABASE_URL'] || 'sqlite://db/database.db')
