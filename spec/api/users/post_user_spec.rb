@@ -49,18 +49,6 @@ describe 'POST user' do
         expect(last_response.body).to include('Username cannot be empty')
       end
 
-      it 'not provided password parameter' do
-        post '/users', username: 'alex'
-
-        expect(last_response.body).to include('Password can not be empty')
-      end
-
-      it 'empty password' do
-        post '/users', username: 'alex', bcrypted_password: ''
-
-        expect(last_response.body).to include('Password can not be empty')
-      end
-
       it 'taken username' do
         post '/users', username: 'alex', bcrypted_password: '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK'
         post '/users', username: 'alex', bcrypted_password: '$2a$04$u2sIANr.4hkB2ruF9YQJkOAhvc1EALJneSXZhJjEdQvRl2CeF.7zK'

@@ -1,7 +1,5 @@
 class Posts < Grape::API
   resources :posts do
-    errors = Array.new
-
     get '/' do
       if params[:category]
         @category = Category.where(name: params[:category]).first
@@ -20,47 +18,14 @@ class Posts < Grape::API
     end
 
     post '/' do
-      errors = Array.new
+      validation = ValidationService.new(
+          AuthErrorsService.new(headers).validation_errors,
+          PostCreatingErrorsService.new(params).validation_errors
+      )
 
-      post_errors = post_post_errors(params[:title], params[:description], params[:categories])
-      errors.concat(post_errors) unless post_errors.empty?
-
-      auth_errors = auth_errors(request.headers['X-User-Id'], request.headers['X-Access-Token'])
-      errors.concat(auth_errors) unless auth_errors.empty?
-
-      errors.push('Provide "with_party" - "true" or "false"') if params[:with_party] === nil
-      errors.push('Provide "with_voting" - "true" or "false"') if params[:with_voting] === nil
-
-      if params[:with_voting] == true && !params[:variants]
-        errors.push('Provide "variants" array')
-      end
-
-      if errors.length < 1
-        @post = Post.create(
-            title: params[:title],
-            description: params[:description],
-            with_party: params[:with_party],
-            with_voting: params[:with_voting]
-        )
-
-        @user = User[request.headers['X-User-Id']] # finds a post owner
-        @user.add_post(@post) # pushes a recently created post to founded user
-
-        params[:categories].each do |category_name|
-          category = Category.where(name: category_name).first
-          category.nil? && (category = Category.create(name: category_name))
-          category.add_post(@post)
-        end
-
-        params[:with_voting] === true && params[:variants].each do |variant|
-          Variant.create(body: variant, post_id: @post.id)
-        end
-
-        (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index')
-      else
-        (status 422) && ({ errors: errors })
-
-      end
+      validation.without_errors? ?
+          CreatePostService.new(params, request.headers['X-User-Id']).show_post && render_posts_list :
+          render_errors(validation.errors)
     end
 
     put '/:id' do
@@ -167,5 +132,4 @@ class Posts < Grape::API
       end
     end
   end
-
 end
