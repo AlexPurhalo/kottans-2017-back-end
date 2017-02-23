@@ -1,20 +1,11 @@
 class Posts < Grape::API
   resources :posts do
     get '/' do
-      if params[:category]
-        @category = Category.where(name: params[:category]).first
+      validation = ValidationService.new(PostsReadingErrorsService.new(params).validation_errors)
 
-        if @category
-          @posts = @category.posts.sort_by {|obj| obj.created_at}.reverse
-          @posts.length < 1 && errors.push('Still does not contain any post :(')
-        else
-          errors.push('Category with this name does not exist')
-        end
-      else
-        @posts = Post.order(Sequel.desc(:created_at))
-      end
-
-      errors.length < 1 ? (render rabl: 'posts/index') : ((status 422) && ({ errors: errors }))
+      validation.without_errors? ?
+          (@posts = ReadPostsService.new(params).show_posts) && (render rabl: 'posts/index') :
+          render_errors(validation.errors)
     end
 
     post '/' do

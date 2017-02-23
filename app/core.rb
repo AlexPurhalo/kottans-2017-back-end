@@ -18,9 +18,10 @@ class App < Grape::API
   mount ValidationService
   mount AuthErrorsService
   mount PostCreatingErrorsService
+  mount PostsReadingErrorsService
 
   mount CreatePostService
-
+  mount ReadPostsService
 
   helpers Validation
 
