@@ -50,22 +50,16 @@ class Posts < Grape::API
     end
 
     post ':post_id/variants/:variant_id/voting_answers/' do
-      user_id, access_token, errors = request.headers['X-User-Id'], request.headers['X-Access-Token'], Array.new
-      (auth_errors = auth_errors(user_id, access_token)) && (errors.concat(auth_errors) unless auth_errors.empty?)
+      validation = ValidationService.new(
+          AuthErrorsService.new(request.headers).validation_errors,
+          AddVotingAnswersErrorsService.new(params).validation_errors
+      )
 
-      post_id, variant_id = params[:post_id], params[:variant_id]
-
-      if errors.length < 1
-        answer = VotingAnswer.create(post_id: post_id, variant_id: variant_id, user_id: user_id)
-
-        User[user_id].add_voting_answer(answer)
-        Post[post_id].add_voting_answer(answer)
-        Variant[variant_id].add_voting_answer(answer)
-
-        @answers = Post[post_id].voting_answers
-        (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index')
+      if validation.without_errors?
+        voting = AddVotingAnswersService.new(params, request.headers)
+        voting.process_answer && (@voting_answers = voting.show_answers) && (render rabl: 'posts/voting_answers')
       else
-        (status 422) && ({ errors: errors })
+        render_errors(validation.errors)
       end
     end
 
