@@ -14,23 +14,25 @@ class App < Grape::API
   format :json
   formatter :json, Grape::Formatter::Rabl
 
-
+  # Validation Services
   mount ValidationService
   mount AuthErrorsService
   mount PostCreatingErrorsService
   mount PostsReadingErrorsService
+  mount PostPreferencesErrorsService
 
+  # Data Generation Services
   mount CreatePostService
   mount ReadPostsService
+  mount AddPreferenceService
 
+  # Helpers
   helpers Validation
 
+  # API
   mount Users
   mount Sessions
-
   mount Posts
-
   mount Categories
-
   mount Questions
 end

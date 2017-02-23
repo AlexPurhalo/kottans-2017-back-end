@@ -10,7 +10,7 @@ class Posts < Grape::API
 
     post '/' do
       validation = ValidationService.new(
-          AuthErrorsService.new(headers).validation_errors,
+          AuthErrorsService.new(request.headers).validation_errors,
           PostCreatingErrorsService.new(params).validation_errors
       )
 
@@ -31,25 +31,17 @@ class Posts < Grape::API
           { errors: { post: ['Post is not exist or already was destroyed']}}
     end
 
-    put ':id/votes' do
-      errors = Array.new
+    put ':post_id/votes' do
+      validation = ValidationService.new(
+          AuthErrorsService.new(request.headers).validation_errors,
+          PostPreferencesErrorsService.new(params).validation_errors
+      )
 
-      user_id, jwt, post_id = request.headers['X-User-Id'], request.headers['X-Access-Token'], params[:id]
-
-      (auth_errors = auth_errors(user_id, jwt)) && (errors.concat(auth_errors) unless auth_errors.empty?)
-
-      if errors.length < 1
-        @post, @user, @vote = Post[post_id], User[user_id], Vote.where(user_id: user_id, post_id: post_id).first
-
-        if @vote.nil?
-          (@vote = Vote.create(like: params[:like])) && (@vote.post = @post) && (@vote.user = @user) && @vote.save
-        else
-          @vote.like === params[:like] ? @vote.destroy : @vote.update(like: !@vote.like)
-        end
-
-        (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index')
+      if validation.without_errors?
+        preferences = AddPreferenceService.new(params, request.headers)
+        preferences.process_vote && render_post_votes(preferences.show_votes)
       else
-        (status 422) && ({errors: errors})
+        render_errors(validation.errors)
       end
     end
 
