@@ -8,4 +8,6 @@ module Validation
   def render_post_votes(votes_list); (@votes = votes_list) &&  (render rabl: 'posts/post_votes'); end
 
   def render_post_party(party); (@party = party) && (render rabl: 'posts/post_party'); end
+
+  def render_voting(answers); (@voting_answers = answers) && (render rabl: 'posts/voting_answers'); end
 end

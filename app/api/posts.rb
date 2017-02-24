@@ -9,11 +9,8 @@ class Posts < Grape::API
     end
 
     post '/' do
-      validation = ValidationService.new(
-          AuthErrorsService.new(request.headers).validation_errors,
-          PostCreatingErrorsService.new(params).validation_errors
-      )
-
+      validation = ValidationService.new(AuthErrorsService.new(request.headers).validation_errors,
+                                         PostCreatingErrorsService.new(params).validation_errors)
       validation.without_errors? ?
           CreatePostService.new(params, request.headers['X-User-Id']).show_post && render_posts_list :
           render_errors(validation.errors)
@@ -23,49 +20,20 @@ class Posts < Grape::API
       update_by_params((@post = Post[params[:id]]), params) && (render rabl: 'posts/show')
     end
 
-    delete '/:id' do
-      @post = Post[params[:id]]
-
-      @post ?
-          (@post.destroy) && (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index') :
-          { errors: { post: ['Post is not exist or already was destroyed']}}
-    end
-
     put ':post_id/votes' do
-      validation = ValidationService.new(
-          AuthErrorsService.new(request.headers).validation_errors,
-          PostPreferencesErrorsService.new(params).validation_errors
-      )
-
-      if validation.without_errors?
-        preferences = AddPreferenceService.new(params, request.headers)
-        preferences.process_vote && render_post_votes(preferences.show_votes)
-      else
-        render_errors(validation.errors)
-      end
-    end
-
-    get ':id/voting_answers', rabl: 'voting_answers/index' do
-      @answers = Post[params[:id]].voting_answers
+      validation = ValidationService.new(AuthErrorsService.new(request.headers).validation_errors,
+                                         PostPreferencesErrorsService.new(params).validation_errors)
+      validation.without_errors? ?
+          (pref = AddPreference.new(params, request.headers)) && pref.process_vote && render_post_votes(pref.show) :
+          render_errors(validation.errors)
     end
 
     post ':post_id/variants/:variant_id/voting_answers/' do
-      validation = ValidationService.new(
-          AuthErrorsService.new(request.headers).validation_errors,
-          AddVotingAnswersErrorsService.new(params).validation_errors
-      )
-
-      if validation.without_errors?
-        voting = AddVotingAnswersService.new(params, request.headers)
-        voting.process_answer && (@voting_answers = voting.show_answers) && (render rabl: 'posts/voting_answers')
-      else
-        render_errors(validation.errors)
-      end
-    end
-
-    get ':id/comments', rabl: 'posts/index' do
-      @post = Post[params[:id]]
-      @comments = @post.comments
+      validation = ValidationService.new(AuthErrorsService.new(request.headers).validation_errors,
+                                         AddVotingAnswersErrorsService.new(params).validation_errors)
+      validation.without_errors? ?
+          (voting = AddVotingAnswer.new(params, request.headers)) && voting.process && (render_voting(voting.show)) :
+          render_errors(validation.errors)
     end
 
     post ':post_id/party' do
@@ -76,23 +44,13 @@ class Posts < Grape::API
           render_errors(validation.errors)
     end
 
-    post ':id/comments' do
-      errors = Array.new
+    post ':post_id/comments' do
+      validation = ValidationService.new(AuthErrorsService.new(request.headers).validation_errors,
+                                         CreateCommentErrors.new(params).validation_errors)
 
-      if params[:body].nil? || params[:body].length < 1
-        errors.push('Please provide some content for to post a comment')
-      end
-
-      auth_errors = auth_errors(request.headers['X-User-Id'], request.headers['X-Access-Token'])
-      errors.concat(auth_errors) unless auth_errors.empty?
-
-      if errors.length < 1
-        @post, @user = Post[params[:id]], User[request.headers['X-User-Id']]
-        (@comment = Comment.create(body: params[:body])) && @user.add_comment(@comment) && @post.add_comment(@comment)
-        (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index')
-      else
-        (status 422) && ({ errors: errors })
-      end
+      validation.without_errors? ?
+        (@comments = CreateComment.new(params, request.headers).show_comments) && (render rabl: 'posts/post_comments') :
+        validation.errors
     end
   end
 end

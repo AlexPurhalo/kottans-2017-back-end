@@ -1,4 +1,4 @@
-class AddPreferenceService
+class AddPreference
   def initialize(params, headers)
     @post = Post[params[:post_id]]
     @user = User[headers['X-User-Id']]
@@ -14,7 +14,7 @@ class AddPreferenceService
     end
   end
 
-  def show_votes; @post.votes; end
+  def show; @post.votes; end
   private
   def has_same_like_val?; @vote.like === @like ? true : false; end
   def vote_exist?; @vote.nil? ? false : true; end

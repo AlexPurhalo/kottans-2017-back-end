@@ -22,13 +22,16 @@ class App < Grape::API
   mount PostPreferencesErrorsService
   mount AddVotingAnswersErrorsService
   mount PersonAddingToPartyErrors
+  mount CreateCommentErrors
 
   # Data Generation Services
   mount CreatePostService
   mount ReadPostsService
-  mount AddPreferenceService
-  mount AddVotingAnswersService
+  mount AddPreference
+  mount AddVotingAnswer
   mount ProcessParty
+  mount CreateComment
+
   # Helpers
   helpers Validation
 
