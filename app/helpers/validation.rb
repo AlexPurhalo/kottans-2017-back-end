@@ -6,4 +6,6 @@ module Validation
   def render_errors(validation_errors); (status 422) && { errors: validation_errors }; end
 
   def render_post_votes(votes_list); (@votes = votes_list) &&  (render rabl: 'posts/post_votes'); end
+
+  def render_post_party(party); (@party = party) && (render rabl: 'posts/post_party'); end
 end

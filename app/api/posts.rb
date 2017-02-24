@@ -68,26 +68,12 @@ class Posts < Grape::API
       @comments = @post.comments
     end
 
-    post ':id/party' do
-      post_id, user_id, access_token = params[:id], request.headers['X-User-Id'], request.headers['X-Access-Token']
-
-      (auth_errors = auth_errors(user_id, access_token)) && (errors.concat(auth_errors) unless auth_errors.empty?)
-
-      if errors.length < 1
-        @post, @user = Post[post_id], User[user_id]
-        @party = @post.party
-        @party.nil? && (@party = Party.create(post_id: @post.id))
-
-        user_exist = false
-        @party.users.map { |user| user[:id] == user_id.to_i && (user_exist = true)}
-
-        user_exist === true && @party.remove_user(@user)
-        user_exist === false && @party.add_user(@user)
-
-        (@posts = Post.order(Sequel.desc(:created_at))) && (render rabl: 'posts/index')
-      else
-        (status 422) && ({ errors: errors })
-      end
+    post ':post_id/party' do
+      validation = ValidationService.new(AuthErrorsService.new(request.headers).validation_errors,
+                                         PersonAddingToPartyErrors.new(params).validation_errors)
+      validation.without_errors? ?
+          (party = ProcessParty.new(params, request.headers)) && party.process && render_post_party(party.show) :
+          render_errors(validation.errors)
     end
 
     post ':id/comments' do
