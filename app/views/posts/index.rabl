@@ -1,5 +1,7 @@
 node(:meta) { |m| {
-        total_objects: Post.count
+        total_objects: Post.count,
+        page_num: params[:page],
+        page_size: params[:size]
     }
 }
 

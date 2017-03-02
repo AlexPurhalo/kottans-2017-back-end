@@ -11,8 +11,12 @@ class Posts < Grape::API
     post '/' do
       validation = ValidationService.new(AuthErrorsService.new(request.headers).validation_errors,
                                          PostCreatingErrorsService.new(params).validation_errors)
+
+      for_paginating = { category: 'Events', page: 1, size: 5}
+
       validation.without_errors? ?
-          CreatePostService.new(params, request.headers['X-User-Id']).show_post && render_posts_list :
+          CreatePostService.new(params, request.headers['X-User-Id']).show_post &&
+              (@posts = ReadPostsService.new(for_paginating).show_posts) && (render rabl: 'posts/index') :
           render_errors(validation.errors)
     end
 
