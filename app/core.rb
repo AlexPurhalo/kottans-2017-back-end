@@ -23,6 +23,7 @@ class App < Grape::API
   mount AddVotingAnswersErrorsService
   mount PersonAddingToPartyErrors
   mount CreateCommentErrors
+  mount ShowPostErrors
 
   # Data Generation Services
   mount CreatePostService
@@ -31,6 +32,7 @@ class App < Grape::API
   mount AddVotingAnswer
   mount ProcessParty
   mount CreateComment
+  mount ShowPost
 
   # Helpers
   helpers Validation

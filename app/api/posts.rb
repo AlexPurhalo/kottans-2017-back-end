@@ -55,4 +55,11 @@ class Posts < Grape::API
         (@comments = CreateComment.new(params, request.headers).show_comments) && (render rabl: 'posts/post_comments') :
         validation.errors
   end
+
+  get 'posts/:post_id' do
+    validation = ValidationService.new(ShowPostErrors.new(params).validation_errors)
+    validation.errors
+    validation.without_errors? ?
+        ((@post = ShowPost.new(params).show_post) && (render rabl: 'posts/show_post')) : (validation.errors)
+  end
 end
