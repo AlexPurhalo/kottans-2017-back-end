@@ -6,6 +6,8 @@ require 'sequel'
 require 'rest-client'
 require 'rack/cors'
 
+require 'dotenv/load'
+
 DB = Sequel.connect(ENV['DATABASE_URL'] || 'sqlite://db/database.db')
 
 require './app/core'
